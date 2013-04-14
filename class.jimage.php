@@ -4,7 +4,7 @@ define('USE_WIDTH','w');
 define('USE_HEIGHT','h');
 define('USE_AUTO','a');
 /*
-  IMG_FILTER_NEGATE: Reverses all colors of the image. 
+	IMG_FILTER_NEGATE: Reverses all colors of the image. 
 	IMG_FILTER_GRAYSCALE: Converts the image into grayscale. 
 	IMG_FILTER_BRIGHTNESS: Changes the brightness of the image. Use arg1 to set the level of brightness. 
 	IMG_FILTER_CONTRAST: Changes the contrast of the image. Use arg1 to set the level of contrast. 
@@ -18,7 +18,7 @@ define('USE_AUTO','a');
 	IMG_FILTER_PIXELATE: Applies pixelation effect to the image, use arg1 to set the block size and arg2 to set the pixelation effect mode
 */
 error_reporting(E_ERROR);
-class jImage extends main{
+class jImage{
 public $jpeg_quality = 80;
 public $image_replace = false;
 private $mem_types = array('','gif','jpeg','png');
@@ -74,7 +74,7 @@ function joinAll( $path,$file_output,$size,$org = USE_HEIGHT,$filter_add = false
 		return $this->saveImage($this->img_o,$file_output);
 	}
 }
-function resize( $file,&$width,&$height=false,$org=USE_HOWSET,&$type='jpeg' ) {
+function resize( $file,&$width,&$height=false,$org=USE_AUTO,&$type='jpeg' ) {
 	if( $this->isImage($file,$w_i,$h_i,$type) ){
 		if( $org == USE_AUTO ){
 			if($w_i > $h_i )
@@ -119,14 +119,14 @@ public function isImage( $filename,&$w=0,&$h=0,&$type='' ){
 	$type = @$this->mem_types[$type1];
 	return ( !empty($type) and $w and $h and isset($this->mem_types[$type1]) );
 }
-public function filter($file,$filter=false){
+public function filter($file,$filter=false, $arg1 = null, $arg2 = null, $arg3 = null, $arg4 = null){
 	if($this->isImage($file,$w,$h,$type)){
 		$func = 'imagecreatefrom'.$type;
 		$img = $func($file);
 		if( is_callable($filter) ){
 			$img = $filter($img,$file,$type,$w,$h);
 		}else if( $filter!==false ){
-			imagefilter($img, $filter);
+			imagefilter($img, $filter,$arg1,$arg2,$arg3,$arg4);
 		}
 		$this->saveImage($img,$file.'.'.$type);
 		if($this->image_replace){
@@ -136,7 +136,7 @@ public function filter($file,$filter=false){
 	}
 	
 }
-function thumb( $file,$thumb,$width,$height=false,$org=USE_HOWSET ){
+function thumb( $file,$thumb,$width,$height=false,$org=USE_AUTO ){
 	if($this->image_replace or !file_exists( $thumb ) and $this->isImage($file)){
 		$img = $this->resize($file,$width,$height,$org,$ext);
 		$this->saveImage( $img,$thumb,$ext );
@@ -151,3 +151,4 @@ function _thumb( $file,$width,$height=false,$org=USE_HOWSET ){
 	return '/'.$out;
 }
 }
+?>
