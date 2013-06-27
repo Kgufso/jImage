@@ -31,6 +31,14 @@ private function blank( $width,$height,$use_alpha = false ){
 	}
 	return $image;
 }
+private function createFrom( $ext,$file ){
+	$func = 'imagecreatefrom'.$ext;
+	if( !is_callable($func) ){ 
+		throw new Exception( 'gb functon '.$func.' no exists' );
+		return '';
+	}
+	return $func($file);
+}
 private function saveImage( $img,$file_output,$ext='jpeg' ){
 	if ( $ext == 'jpeg' ) 
 		return imagejpeg($img,$file_output,$this->jpeg_quality);
@@ -90,18 +98,49 @@ function resize( $file,&$width,&$height=false,$org=USE_AUTO,&$type='jpeg' ) {
 			$width = ( $height/$h_i ) * $w_i;
 		}
 		$ext = $type;
-		$func = 'imagecreatefrom'.$ext;
-		if( !is_callable($func) ){ 
-			throw new Exception( 'gb functon '.$func.' no exists' );
-			return '';
-		}
-		$img = $func($file);
+		$img = $this->createFrom($ext,$file);
 		$img_o = $this->blank($width, $height);
 		imagecopyresampled($img_o, $img, 0, 0, 0, 0, $width, $height, $w_i, $h_i);
 		imagedestroy($img);
 		return $img_o;
 	}
 	return null;
+}
+/**
+ * Обрезка изображения
+ *
+ * Функция работает с PNG, GIF и JPEG изображениями.
+ * Обрезка идёт как с указанием абсоютной длины, так и относительной (отрицательной).
+ *
+ * @param string Расположение исходного файла
+ * @param string Расположение конечного файла
+ * @param array Координаты обрезки, по умолчанию делает квадрат по меньгей из сторон
+ * @return bool
+ */
+function crop($file_input, $file_output, $crop = 'square') {
+	if( !$this->isImage( $file_input,$w_i, $h_i, $ext ) )return false;
+	if ( $crop == 'square' ) {
+		$min = $w_i;
+		if ($w_i > $h_i) $min = $h_i;
+		$w_o = $h_o = $min;
+	} else {
+		list($x_o, $y_o, $w_o, $h_o) = $crop;
+		if ($percent) {
+			$w_o *= $w_i / 100;
+			$h_o *= $h_i / 100;
+			$x_o *= $w_i / 100;
+			$y_o *= $h_i / 100;
+		}
+    	if ($w_o < 0) $w_o += $w_i;
+	    $w_o -= $x_o;
+	   	if ($h_o < 0) $h_o += $h_i;
+		$h_o -= $y_o;
+	}
+	$img = $this->createFrom($ext,$file_input);
+	$img_o = $this->blank($w_o, $h_o);
+	imagecopy($img_o, $img, 0, 0, $x_o, $y_o, $w_o, $h_o);
+	$this->saveImage( $img_o,$file_output,$ext );
+	return true;
 }
 function each($path,$callback,$ext = 'jpg'){
 	if( file_exists( $path ) and is_callable($callback) ){
