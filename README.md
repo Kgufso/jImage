@@ -7,6 +7,7 @@ snippets
 Low quality for all photos in dir
 
     include 'class.jimage.php';
+    set_time_limit(0);
     $ji = new jImage();
     $ji->jpeg_quality = 50;
     $ji->image_replace = true;
