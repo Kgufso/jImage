@@ -17,7 +17,6 @@ define('USE_AUTO','a');
 	IMG_FILTER_SMOOTH: Makes the image smoother. Use arg1 to set the level of smoothness. 
 	IMG_FILTER_PIXELATE: Applies pixelation effect to the image, use arg1 to set the block size and arg2 to set the pixelation effect mode
 */
-error_reporting(E_ERROR);
 class jImage{
 public $jpeg_quality = 80;
 public $image_replace = false;
@@ -31,7 +30,7 @@ private function blank( $width,$height,$use_alpha = false ){
 	}
 	return $image;
 }
-private function createFrom( $ext,$file ){
+public function createFrom( $ext,$file ){
 	$func = 'imagecreatefrom'.$ext;
 	if( !is_callable($func) ){ 
 		throw new Exception( 'gb functon '.$func.' no exists' );
@@ -39,7 +38,7 @@ private function createFrom( $ext,$file ){
 	}
 	return $func($file);
 }
-private function saveImage( $img,$file_output,$ext='jpeg' ){
+public function saveImage( $img,$file_output,$ext='jpeg' ){
 	if ( $ext == 'jpeg' ) 
 		return imagejpeg($img,$file_output,$this->jpeg_quality);
 	$func = 'image'.$ext;
@@ -142,13 +141,32 @@ function crop($file_input, $file_output, $crop = 'square') {
 	$this->saveImage( $img_o,$file_output,$ext );
 	return true;
 }
-function each($path,$callback,$ext = 'jpg'){
-	if( file_exists( $path ) and is_callable($callback) ){
-		$Handler = glob ($path . '*.'.$ext);
-		foreach ($Handler as $file){
-			$fi = pathinfo($file);
-			$obj = isset($fi["extension"])?strtolower($fi["extension"]):'';
-			$callback( $file,$this,$obj,$fi );
+function clearDir ($directory,&$countfile=0,&$countdir=0){
+	$dir = opendir($directory);
+	while(($file = readdir($dir))){
+		if ( is_file ($directory."/".$file)){
+			unlink ($directory."/".$file);
+			$countfile++;
+		}else if ( is_dir ($directory."/".$file) && ($file != ".") && ($file != "..")){
+			clearDir ($directory."/".$file,$countfile,$countdir); 
+			unlink($directory."/".$file);			
+			$countdir++;
+		}
+	}
+	closedir ($dir);
+}
+function each($path,$callback,$ext = 'jpg', $open_dir = false){
+	if( file_exists( $path ) and is_dir($path) and is_callable($callback) ){
+		$dir = opendir($path);
+		while(($file = readdir($dir))){
+			if ( is_file ($path."/".$file)){
+				$fi = pathinfo($path."/".$file);
+				$obj = isset($fi["extension"])?strtolower($fi["extension"]):'';
+				if( in_array($obj,explode(',',$ext)) )
+					$callback( $path."/".$file,$this,$obj,$fi );
+			}else if ( $open_dir and is_dir($path."/".$file) and ($file != ".") and ($file != "..") ){
+				$this->each($path."/".$file,$callback,$ext,true); 
+			}
 		}
 	}else throw new Exception( 'path '.$path.' no exists' );
 }
@@ -190,4 +208,3 @@ function _thumb( $file,$width,$height=false,$org=USE_HOWSET ){
 	return '/'.$out;
 }
 }
-?>
