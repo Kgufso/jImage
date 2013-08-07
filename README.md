@@ -4,7 +4,7 @@ Class fot packet process image
 
 snippets
 
-Low quality for all photos in dir
+Low quality for all jpg images in folder (last line 'true' means - include all subfolders)
 
     include 'class.jimage.php';
     set_time_limit(0);
