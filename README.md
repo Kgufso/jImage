@@ -5,7 +5,9 @@ Class fot packet process image
 snippets
 
 Low quality for all jpg images in folder (last line 'true' means - include all subfolders)
+
 $w>1000 - only image with width > 1000px
+
 filemtime($file)<time()-3600 - only image which change < 1 hours
 
     include 'class.jimage.php';
